@@ -56,10 +56,10 @@ puts "   → #{icon_a}"
 
 # ── B: north slot only — two sub-slots (stamp_label_badge equivalent) ────────
 
-puts "B) North slot — LIG- (grey left) + 2969 (orange right)"
+puts "B) North slot — LIG (grey left) + 2969 (orange right)"
 icon_b = File.join(OUT_DIR, "B_north_ticket.png")
 blue_icon(icon_b)
-BadgerHelper.stamp_text(icon_path: icon_b, north_left: "LIG-", north_right: "2969")
+BadgerHelper.stamp_text(icon_path: icon_b, north_left: "LIG", north_right: "2969")
 puts "   → #{icon_b}"
 
 # ── C: north + center combined (Slyyd Alpha layout) ──────────────────────────
@@ -69,7 +69,7 @@ icon_c = File.join(OUT_DIR, "C_slyyd_alpha.png")
 blue_icon(icon_c)
 BadgerHelper.stamp_text(
   icon_path:     icon_c,
-  north_left:    "LIG-",
+  north_left:    "LIG",
   north_right:   "2969",
   center_top:    "1.5.2",
   center_bottom: "6349"
@@ -83,7 +83,7 @@ icon_d = File.join(OUT_DIR, "D_slyyd_alpha_full.png")
 blue_icon(icon_d)
 BadgerHelper.stamp_text(
   icon_path:     icon_d,
-  north_left:    "LIG-",
+  north_left:    "LIG",
   north_right:   "2969",
   center_top:    "1.5.2",
   center_bottom: "6349"

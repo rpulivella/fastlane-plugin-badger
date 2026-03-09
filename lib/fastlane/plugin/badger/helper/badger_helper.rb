@@ -70,45 +70,45 @@ module Fastlane
         icons.each do |icon|
           UI.message("  badger stamp_text → #{icon}")
 
-          # North slot
+          # North slot — pointsize 90, border 18x9
           if north_left && north_right
             badge = tmp_file("north_badge", ".png")
-            generate_horizontal_badge(north_left, north_right, badge)
+            generate_horizontal_badge(north_left, north_right, badge, pointsize: 90, border: "18x9")
             round_corners(badge, radius: 4)
-            composite_badge(icon, badge, "North", scale: 0.14)
+            composite_badge(icon, badge, "North")
             FileUtils.rm_f(badge)
           elsif north_right
             badge = tmp_file("north_badge", ".png")
-            generate_single_badge(north_right, badge, color: ORANGE_COLOR)
+            generate_single_badge(north_right, badge, color: ORANGE_COLOR, pointsize: 90, border: "18x9")
             round_corners(badge, radius: 4)
-            composite_badge(icon, badge, "North", scale: 0.14)
+            composite_badge(icon, badge, "North")
             FileUtils.rm_f(badge)
           elsif north_left
             badge = tmp_file("north_badge", ".png")
-            generate_single_badge(north_left, badge, color: GREY_COLOR)
+            generate_single_badge(north_left, badge, color: GREY_COLOR, pointsize: 90, border: "18x9")
             round_corners(badge, radius: 4)
-            composite_badge(icon, badge, "North", scale: 0.14)
+            composite_badge(icon, badge, "North")
             FileUtils.rm_f(badge)
           end
 
-          # Center slot
+          # Center slot — pointsize 117, border 23x12 (1.3× North)
           if center_top && center_bottom
             badge = tmp_file("center_badge", ".png")
-            generate_vertical_badge(center_top, center_bottom, badge)
+            generate_vertical_badge(center_top, center_bottom, badge, pointsize: 117, border: "23x12")
             round_corners(badge, radius: 4)
-            composite_badge(icon, badge, "Center", scale: 0.17)
+            composite_badge(icon, badge, "Center")
             FileUtils.rm_f(badge)
           elsif center_bottom
             badge = tmp_file("center_badge", ".png")
-            generate_single_badge(center_bottom, badge, color: ORANGE_COLOR)
+            generate_single_badge(center_bottom, badge, color: ORANGE_COLOR, pointsize: 117, border: "23x12")
             round_corners(badge, radius: 4)
-            composite_badge(icon, badge, "Center", scale: 0.17)
+            composite_badge(icon, badge, "Center")
             FileUtils.rm_f(badge)
           elsif center_top
             badge = tmp_file("center_badge", ".png")
-            generate_single_badge(center_top, badge, color: GREY_COLOR)
+            generate_single_badge(center_top, badge, color: GREY_COLOR, pointsize: 117, border: "23x12")
             round_corners(badge, radius: 4)
-            composite_badge(icon, badge, "Center", scale: 0.17)
+            composite_badge(icon, badge, "Center")
             FileUtils.rm_f(badge)
           end
         end
@@ -198,7 +198,7 @@ module Fastlane
       # @param border    [String]  ImageMagick border geometry, e.g. "9x5".
       def self.generate_single_badge(label, out_path,
                                      color: ORANGE_COLOR,
-                                     pointsize: 26, border: "9x5")
+                                     pointsize: 90, border: "18x9")
         MiniMagick::Tool::Convert.new do |c|
           c.background color
           c.fill "white"
@@ -224,7 +224,7 @@ module Fastlane
       # @param border      [String] ImageMagick border geometry, e.g. "9x5".
       def self.generate_horizontal_badge(left_label, right_label, out_path,
                                          left_color: GREY_COLOR, right_color: ORANGE_COLOR,
-                                         pointsize: 26, border: "9x5")
+                                         pointsize: 90, border: "18x9")
         left_path  = "#{out_path}.left.png"
         right_path = "#{out_path}.right.png"
 
@@ -265,7 +265,7 @@ module Fastlane
       # @param border       [String] ImageMagick border geometry, e.g. "9x5".
       def self.generate_vertical_badge(top_label, bottom_label, out_path,
                                        top_color: GREY_COLOR, bottom_color: ORANGE_COLOR,
-                                       pointsize: 26, border: "9x5")
+                                       pointsize: 90, border: "18x9")
         top_path    = "#{out_path}.top.png"
         bottom_path = "#{out_path}.bottom.png"
 
@@ -282,6 +282,26 @@ module Fastlane
             c.border border
             c << path
           end
+        end
+
+        # Normalize both segments to the same width before stacking.
+        # label: auto-sizes each canvas to its text, so segments can differ in width.
+        # Extend the narrower one with its own background color, gravity Center,
+        # so the text stays centered within the equalized block.
+        top_w    = MiniMagick::Image.open(top_path).width
+        bottom_w = MiniMagick::Image.open(bottom_path).width
+        max_w    = [top_w, bottom_w].max
+
+        [[top_path, top_color], [bottom_path, bottom_color]].each do |path, color|
+          img = MiniMagick::Image.open(path)
+          next if img.width == max_w
+          system(
+            "magick", path,
+            "-gravity", "Center",
+            "-background", color,
+            "-extent", "#{max_w}x#{img.height}",
+            path
+          )
         end
 
         MiniMagick::Tool::Convert.new do |c|
@@ -318,19 +338,17 @@ module Fastlane
         FileUtils.mv(tmp, image_path)
       end
 
-      # Composites a badge PNG onto an icon PNG in-place.
-      # The badge is resized to `scale` fraction of the icon's HEIGHT before
-      # compositing. Scaling by height (not width) ensures consistent text size
-      # across all badge types regardless of how many characters they contain.
+      # Composites a badge PNG onto an icon PNG in-place at its natural size.
+      # Badge dimensions are driven entirely by the pointsize used when generating
+      # each segment — no resizing is applied. This ensures North and Center slots
+      # share the same text height, since all segments use the same pointsize.
       #
       # @param icon_path  [String]  Path to the icon PNG (modified in-place).
       # @param badge_path [String]  Path to the badge PNG.
       # @param gravity    [String]  ImageMagick gravity, e.g. "North", "Center".
-      # @param scale      [Float]   Badge height as a fraction of icon height (0..1).
-      def self.composite_badge(icon_path, badge_path, gravity, scale: 0.14)
+      def self.composite_badge(icon_path, badge_path, gravity)
         icon  = MiniMagick::Image.open(icon_path)
         badge = MiniMagick::Image.open(badge_path)
-        badge.resize "x#{(icon.height * scale).to_i}"
 
         result = icon.composite(badge) do |c|
           c.compose "Over"

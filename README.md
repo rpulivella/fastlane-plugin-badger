@@ -224,7 +224,7 @@ lane :deploy_alpha do
   # North: ticket prefix (grey left) + ticket number (orange right)
   ticket = ENV["BRANCH_NAME"]&.match(/LIG-(\d+)/)
   if ticket
-    stamp_label_badge(north_left: "LIG-", north_right: ticket[1])
+    stamp_label_badge(north_left: "LIG", north_right: ticket[1])
   end
 
   # Corner ribbon
