@@ -10,10 +10,14 @@ module Fastlane
   module Actions
     class StampLabelBadgeAction < Action
       def self.run(params)
-        label     = params[:label]
-        icon_glob = params[:icon_glob]
+        north_left  = params[:north_left]
+        north_right = params[:north_right]
+        icon_glob   = params[:icon_glob]
 
-        UI.user_error!("label is required") if label.nil? || label.strip.empty?
+        if (north_left.nil? || north_left.strip.empty?) &&
+           (north_right.nil? || north_right.strip.empty?)
+          UI.user_error!("At least one of north_left or north_right is required")
+        end
 
         icons = Dir.glob(icon_glob)
         if icons.empty?
@@ -21,28 +25,30 @@ module Fastlane
           return
         end
 
-        UI.message("stamp_label_badge: '#{label}' → #{icons.count} icon(s)")
+        left_display  = north_left  ? "'#{north_left}'"  : "(none)"
+        right_display = north_right ? "'#{north_right}'" : "(none)"
+        UI.message("stamp_label_badge: #{left_display} | #{right_display} → #{icons.count} icon(s)")
 
         icons.each do |icon|
           Helper::BadgerHelper.stamp_text(
-            icon_path: icon,
-            version:   nil,
-            build:     nil,
-            ticket:    label
+            icon_path:   icon,
+            north_left:  north_left,
+            north_right: north_right
           )
         end
       end
 
       def self.description
-        "Stamps a single text badge onto app icons using ImageMagick"
+        "Stamps a North-slot text badge onto app icons using ImageMagick"
       end
 
       def self.details
         [
-          "Composites a full-orange text badge showing any label you provide",
-          "(e.g. 'TKT-1234', 'PR-42', 'main') at the center of every icon",
-          "matched by icon_glob. Use on its own or combine with",
-          "stamp_version_badge to also show a version+build badge.",
+          "Composites a two-sub-slot horizontal badge at the top (North) of every icon",
+          "matched by icon_glob.",
+          "  north_left  → grey (#555555) segment on the left",
+          "  north_right → orange (#fe7d37) segment on the right",
+          "Either sub-slot is optional; providing only one renders a single-color badge.",
           "No network access — pure ImageMagick via mini_magick.",
           "Requires the `magick` binary (ImageMagick 7+) in PATH."
         ].join("\n")
@@ -51,10 +57,17 @@ module Fastlane
       def self.available_options
         [
           FastlaneCore::ConfigItem.new(
-            key:         :label,
-            env_name:    "BADGER_LABEL",
-            description: "Text to display on the badge, e.g. 'TKT-1234' or 'PR-42'",
-            optional:    false,
+            key:         :north_left,
+            env_name:    "BADGER_NORTH_LEFT",
+            description: "Grey left segment text for the North badge, e.g. 'LIG-'",
+            optional:    true,
+            type:        String
+          ),
+          FastlaneCore::ConfigItem.new(
+            key:         :north_right,
+            env_name:    "BADGER_NORTH_RIGHT",
+            description: "Orange right segment text for the North badge, e.g. '2969'",
+            optional:    true,
             type:        String
           ),
           FastlaneCore::ConfigItem.new(

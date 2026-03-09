@@ -1,7 +1,7 @@
 # fastlane-plugin-badger
 
-A fastlane plugin that composites version/build text badges and diagonal corner
-ribbon banners onto your app icons at build time — using ImageMagick locally.
+A fastlane plugin that composites text badges and diagonal corner ribbon banners
+onto your app icons at build time — using ImageMagick locally.
 
 **No shields.io. No network calls. No static PNGs committed to the repo.**
 
@@ -62,7 +62,7 @@ OFL-licensed so they are freely bundleable):
 
 | File | Used for |
 |---|---|
-| `JetBrainsMonoNL-Bold.ttf` | Version/build/ticket text badges |
+| `JetBrainsMonoNL-Bold.ttf` | North and Center text badges |
 | `Figtree-Black.otf` | Corner ribbon banners |
 
 **JetBrains Mono NL Bold** — [jetbrains.com/lp/mono](https://www.jetbrains.com/lp/mono/)
@@ -76,23 +76,50 @@ Both fonts can be committed to your repo without attribution requirements
 
 ---
 
+## Badge slot layout
+
+Badger uses a two-slot system. Each slot has two optional sub-slots with a
+consistent color convention: **grey = secondary**, **orange = primary**.
+
+```
+┌─────────────────────────┐
+│  [ LIG- ] [ 2969 ]      │  ← North slot: left (grey) | right (orange)
+│                         │
+│     [ 1.5.2 ]           │  ← Center slot: top (grey)
+│     [  6349 ]           │  ← Center slot: bottom (orange)
+│                         │
+│              ╲ ALPHA ╱  │  ← Corner banner (separate action)
+└─────────────────────────┘
+```
+
+- **North slot** — horizontal two-tone bar at the top of the icon
+  - `north_left` → grey (#555555) segment on the left
+  - `north_right` → orange (#fe7d37) segment on the right
+- **Center slot** — vertical two-tone stack in the middle of the icon
+  - `center_top` → grey (#555555) segment on top
+  - `center_bottom` → orange (#fe7d37) segment on bottom
+
+Both sub-slots in both positions are optional. Providing only one sub-slot
+renders a single-color badge in that slot.
+
+---
+
 ## Actions
 
 ### `stamp_version_badge`
 
-Stamps a two-tone text badge showing the version and build number at the top
-of every matched icon.
-
-The badge is gray on the left (version) and orange on the right (build):
+Stamps the app version and build number into the **Center slot** as a vertical
+two-tone stack — version on top (grey), build number on bottom (orange).
 
 ```
- 1.5.2 | 1234
+     [ 1.5.2 ]     ← grey
+     [  6349 ]     ← orange
 ```
 
 ```ruby
 stamp_version_badge(
   version:   "1.5.2",   # required if xcodeproj not provided
-  build:     "1234",    # required if xcodeproj not provided
+  build:     "6349",    # required if xcodeproj not provided
   xcodeproj: "MyApp/MyApp.xcodeproj",  # optional — auto-reads version/build
   icon_glob: "**/AppIcon.appiconset/*.png"  # default
 )
@@ -100,8 +127,8 @@ stamp_version_badge(
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `version` | String | — | App version, e.g. `"1.5.2"`. Overrides xcodeproj. |
-| `build` | String | — | Build number, e.g. `"1234"`. Overrides xcodeproj. |
+| `version` | String | — | App version string, e.g. `"1.5.2"`. Overrides xcodeproj. |
+| `build` | String | — | Build number string, e.g. `"6349"`. Overrides xcodeproj. |
 | `xcodeproj` | String | — | Path to `.xcodeproj` for auto-reading version/build. |
 | `icon_glob` | String | `**/AppIcon.appiconset/*.png` | Glob to discover icons. |
 
@@ -109,27 +136,29 @@ stamp_version_badge(
 
 ### `stamp_label_badge`
 
-Stamps a single full-orange badge showing any label at the center of
-every matched icon.
+Stamps a two-sub-slot horizontal badge into the **North slot** at the top of
+every matched icon. Left segment is grey, right segment is orange. Either
+sub-slot is optional.
+
+```
+  [ LIG- ] [ 2969 ]    ← grey | orange
+```
 
 ```ruby
 stamp_label_badge(
-  label:     "TKT-1234",
-  icon_glob: "**/AppIcon.appiconset/*.png"  # default
+  north_left:  "LIG-",   # optional — grey left segment
+  north_right: "2969",   # optional — orange right segment
+  icon_glob:   "**/AppIcon.appiconset/*.png"  # default
 )
 ```
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `label` | String | — | Any text label, e.g. `"TKT-1234"` or `"PR-42"`. |
+| `north_left` | String | — | Grey left segment text, e.g. `"LIG-"`. |
+| `north_right` | String | — | Orange right segment text, e.g. `"2969"`. |
 | `icon_glob` | String | `**/AppIcon.appiconset/*.png` | Glob to discover icons. |
 
-To combine a version badge with a label badge in a single lane:
-
-```ruby
-stamp_version_badge(version: "1.5.2", build: "1234")
-stamp_label_badge(label: "TKT-1234")
-```
+At least one of `north_left` or `north_right` must be provided.
 
 ---
 
@@ -143,7 +172,7 @@ giving a clean built-in look without any pill shape.
 stamp_corner_banner(
   label:     "ALPHA",
   corner:    "bottom_right",  # default
-  style:     "dark",          # default
+  style:     "light",
   size:      "normal",        # default
   icon_glob: "**/AppIcon.appiconset/*.png"
 )
@@ -185,48 +214,45 @@ subtler treatment.
 
 ## Typical Fastfile usage
 
-### Alpha Firebase build
+### Alpha Firebase / TestFlight build (version + ticket + corner banner)
 
 ```ruby
 lane :deploy_alpha do
-  stamp_version_badge(
-    xcodeproj: "MyApp/MyApp.xcodeproj"
-  )
-  stamp_corner_banner(
-    label:  "ALPHA",
-    corner: "bottom_right",
-    style:  "dark",
-    size:   "normal"
-  )
+  # Center: version (grey top) + build (orange bottom)
+  stamp_version_badge(xcodeproj: "MyApp/MyApp.xcodeproj")
+
+  # North: ticket prefix (grey left) + ticket number (orange right)
+  ticket = ENV["BRANCH_NAME"]&.match(/LIG-(\d+)/)
+  if ticket
+    stamp_label_badge(north_left: "LIG-", north_right: ticket[1])
+  end
+
+  # Corner ribbon
+  stamp_corner_banner(label: "ALPHA", style: "light")
+
   # ... build and distribute
 end
 ```
 
-### NDA Beta build
+### NDA Beta build (version + corner banner)
 
 ```ruby
 lane :deploy_nda_beta do
-  stamp_version_badge(
-    xcodeproj: "MyApp/MyApp.xcodeproj"
-  )
+  stamp_version_badge(xcodeproj: "MyApp/MyApp.xcodeproj")
   stamp_corner_banner(
-    label:  "NDA",
-    corner: "bottom_right",
-    style:  "dark",
-    size:   "large"   # :large because NDA is a short label
+    label: "NDA",
+    style: "light",
+    size:  "large"   # :large because NDA is a short label
   )
   # ... build and distribute
 end
 ```
 
-### Branch / PR build
+### Open Beta / Production Beta build (corner banner only)
 
 ```ruby
-lane :deploy_pr_build do
-  ticket = ENV["BRANCH_NAME"]&.match(/TKT-\d+/)&.[](0) || "DEV"
-  stamp_version_badge(xcodeproj: "MyApp/MyApp.xcodeproj")
-  stamp_label_badge(label: ticket)
-  stamp_corner_banner(label: "PREVIEW", style: "dark")
+lane :deploy_open_beta do
+  stamp_corner_banner(label: "BETA", style: "light")
   # ... build and distribute
 end
 ```

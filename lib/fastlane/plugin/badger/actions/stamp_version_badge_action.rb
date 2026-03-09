@@ -40,9 +40,9 @@ module Fastlane
 
         icons.each do |icon|
           Helper::BadgerHelper.stamp_text(
-            icon_path: icon,
-            version:   version.to_s,
-            build:     build.to_s
+            icon_path:     icon,
+            center_top:    version.to_s,
+            center_bottom: build.to_s
           )
         end
       end

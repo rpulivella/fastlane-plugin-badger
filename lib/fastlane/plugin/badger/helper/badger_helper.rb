@@ -35,46 +35,81 @@ module Fastlane
       DARK_BG    = "#1c1c1e"
       LIGHT_BG   = "#efefef"
 
+      GREY_COLOR   = "#555555"
+      ORANGE_COLOR = "#fe7d37"
+
       # ────────────────────────────────────────────────────────────────────────
       # Public API
       # ────────────────────────────────────────────────────────────────────────
 
-      # Stamps a version+build text badge onto one or more icons.
+      # Stamps text badges onto app icons using a two-slot layout:
       #
-      # @param icon_path [String] Path to a single PNG or to an xcassets directory.
-      #   When an xcassets directory is given, all PNGs inside
-      #   AppIcon.appiconset/ are discovered automatically.
-      # @param version   [String] App version string, e.g. "1.5.2"
-      # @param build     [String] Build number string, e.g. "1234"
-      # @param ticket    [String, nil] Optional label, e.g. "TKT-1234".
-      #   When present a second badge is composited at Center.
-      def self.stamp_text(icon_path:, version:, build:, ticket: nil)
+      # North slot  — horizontal two-tone bar at the top of the icon.
+      #   north_left  → grey (#555555) segment on the left
+      #   north_right → orange (#fe7d37) segment on the right
+      #   Either sub-slot is optional; providing only one renders a single-color badge.
+      #
+      # Center slot — vertical two-tone stack in the middle of the icon.
+      #   center_top    → grey (#555555) segment on top
+      #   center_bottom → orange (#fe7d37) segment on bottom
+      #   Either sub-slot is optional; providing only one renders a single-color badge.
+      #
+      # @param icon_path    [String] Path to a single PNG or xcassets directory.
+      # @param north_left   [String, nil] Grey left segment text for North slot.
+      # @param north_right  [String, nil] Orange right segment text for North slot.
+      # @param center_top   [String, nil] Grey top segment text for Center slot.
+      # @param center_bottom [String, nil] Orange bottom segment text for Center slot.
+      def self.stamp_text(icon_path:,
+                          north_left: nil, north_right: nil,
+                          center_top: nil, center_bottom: nil)
         icons = resolve_icons(icon_path)
         UI.user_error!("No PNG icons found at: #{icon_path}") if icons.empty?
 
         validate_font!(JETBRAINS_FONT, "JetBrainsMonoNL-Bold.ttf")
 
-        version_label = "#{version}-#{build}"
-
-        stamp_version = !(version.to_s.strip.empty? || build.to_s.strip.empty?)
-
         icons.each do |icon|
           UI.message("  badger stamp_text → #{icon}")
 
-          if stamp_version
-            version_badge_path = tmp_file("version_badge", ".png")
-            generate_text_badge(version_label, version_badge_path, split_at: "-")
-            round_corners(version_badge_path, radius: 4)
-            composite_badge(icon, version_badge_path, "North")
-            FileUtils.rm_f(version_badge_path)
+          # North slot
+          if north_left && north_right
+            badge = tmp_file("north_badge", ".png")
+            generate_horizontal_badge(north_left, north_right, badge)
+            round_corners(badge, radius: 4)
+            composite_badge(icon, badge, "North", scale: 0.14)
+            FileUtils.rm_f(badge)
+          elsif north_right
+            badge = tmp_file("north_badge", ".png")
+            generate_single_badge(north_right, badge, color: ORANGE_COLOR)
+            round_corners(badge, radius: 4)
+            composite_badge(icon, badge, "North", scale: 0.14)
+            FileUtils.rm_f(badge)
+          elsif north_left
+            badge = tmp_file("north_badge", ".png")
+            generate_single_badge(north_left, badge, color: GREY_COLOR)
+            round_corners(badge, radius: 4)
+            composite_badge(icon, badge, "North", scale: 0.14)
+            FileUtils.rm_f(badge)
           end
 
-          if ticket && !ticket.to_s.strip.empty?
-            ticket_badge_path = tmp_file("ticket_badge", ".png")
-            generate_text_badge(ticket.strip, ticket_badge_path, split_at: nil)
-            round_corners(ticket_badge_path, radius: 4)
-            composite_badge(icon, ticket_badge_path, "Center")
-            FileUtils.rm_f(ticket_badge_path)
+          # Center slot
+          if center_top && center_bottom
+            badge = tmp_file("center_badge", ".png")
+            generate_vertical_badge(center_top, center_bottom, badge)
+            round_corners(badge, radius: 4)
+            composite_badge(icon, badge, "Center", scale: 0.17)
+            FileUtils.rm_f(badge)
+          elsif center_bottom
+            badge = tmp_file("center_badge", ".png")
+            generate_single_badge(center_bottom, badge, color: ORANGE_COLOR)
+            round_corners(badge, radius: 4)
+            composite_badge(icon, badge, "Center", scale: 0.17)
+            FileUtils.rm_f(badge)
+          elsif center_top
+            badge = tmp_file("center_badge", ".png")
+            generate_single_badge(center_top, badge, color: GREY_COLOR)
+            round_corners(badge, radius: 4)
+            composite_badge(icon, badge, "Center", scale: 0.17)
+            FileUtils.rm_f(badge)
           end
         end
       end
@@ -151,8 +186,113 @@ module Fastlane
       end
 
       # ────────────────────────────────────────────────────────────────────────
-      # Text badge helpers
+      # Badge generation helpers
       # ────────────────────────────────────────────────────────────────────────
+
+      # Generates a single-color badge PNG for one sub-slot.
+      #
+      # @param label     [String]  Text to render.
+      # @param out_path  [String]  Destination PNG path.
+      # @param color     [String]  Background color (default: orange).
+      # @param pointsize [Integer] Font point size.
+      # @param border    [String]  ImageMagick border geometry, e.g. "9x5".
+      def self.generate_single_badge(label, out_path,
+                                     color: ORANGE_COLOR,
+                                     pointsize: 26, border: "9x5")
+        MiniMagick::Tool::Convert.new do |c|
+          c.background color
+          c.fill "white"
+          c.font JETBRAINS_FONT
+          c.pointsize pointsize.to_s
+          c.gravity "Center"
+          c << "label:#{label}"
+          c.bordercolor color
+          c.border border
+          c << out_path
+        end
+      end
+
+      # Generates a horizontal two-tone badge PNG for the North slot.
+      # Left segment is grey, right segment is orange. Joined with +append.
+      #
+      # @param left_label  [String] Text for the grey left segment.
+      # @param right_label [String] Text for the orange right segment.
+      # @param out_path    [String] Destination PNG path.
+      # @param left_color  [String] Background color for left segment.
+      # @param right_color [String] Background color for right segment.
+      # @param pointsize   [Integer] Font point size.
+      # @param border      [String] ImageMagick border geometry, e.g. "9x5".
+      def self.generate_horizontal_badge(left_label, right_label, out_path,
+                                         left_color: GREY_COLOR, right_color: ORANGE_COLOR,
+                                         pointsize: 26, border: "9x5")
+        left_path  = "#{out_path}.left.png"
+        right_path = "#{out_path}.right.png"
+
+        [[left_path, left_color, left_label],
+         [right_path, right_color, right_label]].each do |path, color, text|
+          MiniMagick::Tool::Convert.new do |c|
+            c.background color
+            c.fill "white"
+            c.font JETBRAINS_FONT
+            c.pointsize pointsize.to_s
+            c.gravity "Center"
+            c << "label:#{text}"
+            c.bordercolor color
+            c.border border
+            c << path
+          end
+        end
+
+        MiniMagick::Tool::Convert.new do |c|
+          c << left_path
+          c << right_path
+          c << "+append"
+          c << out_path
+        end
+
+        FileUtils.rm_f([left_path, right_path])
+      end
+
+      # Generates a vertical two-tone badge PNG for the Center slot.
+      # Top segment is grey, bottom segment is orange. Joined with -append.
+      #
+      # @param top_label    [String] Text for the grey top segment.
+      # @param bottom_label [String] Text for the orange bottom segment.
+      # @param out_path     [String] Destination PNG path.
+      # @param top_color    [String] Background color for top segment.
+      # @param bottom_color [String] Background color for bottom segment.
+      # @param pointsize    [Integer] Font point size.
+      # @param border       [String] ImageMagick border geometry, e.g. "9x5".
+      def self.generate_vertical_badge(top_label, bottom_label, out_path,
+                                       top_color: GREY_COLOR, bottom_color: ORANGE_COLOR,
+                                       pointsize: 26, border: "9x5")
+        top_path    = "#{out_path}.top.png"
+        bottom_path = "#{out_path}.bottom.png"
+
+        [[top_path, top_color, top_label],
+         [bottom_path, bottom_color, bottom_label]].each do |path, color, text|
+          MiniMagick::Tool::Convert.new do |c|
+            c.background color
+            c.fill "white"
+            c.font JETBRAINS_FONT
+            c.pointsize pointsize.to_s
+            c.gravity "Center"
+            c << "label:#{text}"
+            c.bordercolor color
+            c.border border
+            c << path
+          end
+        end
+
+        MiniMagick::Tool::Convert.new do |c|
+          c << top_path
+          c << bottom_path
+          c << "-append"
+          c << out_path
+        end
+
+        FileUtils.rm_f([top_path, bottom_path])
+      end
 
       # Clips an image to rounded corners using DstIn compositing.
       # Passes arguments as an array to system() to avoid shell quoting issues
@@ -178,75 +318,6 @@ module Fastlane
         FileUtils.mv(tmp, image_path)
       end
 
-      # Generates a badge PNG using the `label:` primitive.
-      #
-      # When split_at is provided and present in label, the badge is two-tone:
-      #   left side  → gray (#555555)
-      #   right side → orange (#fe7d37)
-      # When split_at is nil, a single full-orange badge is rendered.
-      #
-      # @param label     [String]       Full label text.
-      # @param out_path  [String]       Destination PNG path.
-      # @param split_at  [String, nil]  Separator string (e.g. "-").
-      # @param left_color  [String]     Background color for left segment.
-      # @param right_color [String]     Background color for right (or full) badge.
-      # @param pointsize   [Integer]    Font point size.
-      # @param border      [String]     ImageMagick border geometry, e.g. "9x5".
-      def self.generate_text_badge(label, out_path, split_at: nil,
-                                   left_color: "#555555", right_color: "#fe7d37",
-                                   pointsize: 22, border: "9x5")
-        font = JETBRAINS_FONT
-
-        if split_at && label.include?(split_at)
-          idx         = label.index(split_at)
-          left_label  = label[0, idx]
-          right_label = label[(idx + split_at.length)..]
-
-          left_path  = "#{out_path}.left.png"
-          right_path = "#{out_path}.right.png"
-
-          [
-            [left_path,  left_color,  left_label],
-            [right_path, right_color, right_label]
-          ].each do |path, color, text|
-            MiniMagick::Tool::Convert.new do |c|
-              c.background color
-              c.fill "white"
-              c.font font
-              c.pointsize pointsize.to_s
-              c.gravity "Center"
-              c << "label:#{text}"
-              c.bordercolor color
-              c.border border
-              c << path
-            end
-          end
-
-          # +append joins left and right horizontally
-          MiniMagick::Tool::Convert.new do |c|
-            c << left_path
-            c << right_path
-            c << "+append"
-            c << out_path
-          end
-
-          FileUtils.rm_f([left_path, right_path])
-        else
-          # Single label — full right_color (orange)
-          MiniMagick::Tool::Convert.new do |c|
-            c.background right_color
-            c.fill "white"
-            c.font font
-            c.pointsize pointsize.to_s
-            c.gravity "Center"
-            c << "label:#{label}"
-            c.bordercolor right_color
-            c.border border
-            c << out_path
-          end
-        end
-      end
-
       # Composites a badge PNG onto an icon PNG in-place.
       # The badge is resized to `scale` fraction of the icon's HEIGHT before
       # compositing. Scaling by height (not width) ensures consistent text size
@@ -256,7 +327,7 @@ module Fastlane
       # @param badge_path [String]  Path to the badge PNG.
       # @param gravity    [String]  ImageMagick gravity, e.g. "North", "Center".
       # @param scale      [Float]   Badge height as a fraction of icon height (0..1).
-      def self.composite_badge(icon_path, badge_path, gravity, scale: 0.12)
+      def self.composite_badge(icon_path, badge_path, gravity, scale: 0.14)
         icon  = MiniMagick::Image.open(icon_path)
         badge = MiniMagick::Image.open(badge_path)
         badge.resize "x#{(icon.height * scale).to_i}"
