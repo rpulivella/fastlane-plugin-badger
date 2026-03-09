@@ -1,6 +1,6 @@
 require "spec_helper"
 
-describe Fastlane::Helper::BadgerHelper do
+RSpec.describe Fastlane::Helper::BadgerHelper do
   subject(:helper) { described_class }
 
   describe "FONTS_DIR" do
@@ -18,22 +18,22 @@ describe Fastlane::Helper::BadgerHelper do
 
     it "has angle, cx, and cy for each corner" do
       helper::CORNER_CFG.each do |corner, cfg|
-        expect(cfg).to include(:angle, :cx, :cy), "corner #{corner} missing keys"
+        expect(cfg).to respond_to(:angle, :cx, :cy), "corner #{corner} missing members"
       end
     end
 
     it "places bottom_right at 75% diagonally" do
       cfg = helper::CORNER_CFG[:bottom_right]
-      expect(cfg[:cx]).to eq(0.75)
-      expect(cfg[:cy]).to eq(0.75)
+      expect(cfg.cx).to eq(0.75)
+      expect(cfg.cy).to eq(0.75)
     end
 
     it "uses -45 angle for bottom_right" do
-      expect(helper::CORNER_CFG[:bottom_right][:angle]).to eq(-45)
+      expect(helper::CORNER_CFG[:bottom_right].angle).to eq(-45)
     end
 
     it "uses +45 angle for bottom_left" do
-      expect(helper::CORNER_CFG[:bottom_left][:angle]).to eq(45)
+      expect(helper::CORNER_CFG[:bottom_left].angle).to eq(45)
     end
   end
 

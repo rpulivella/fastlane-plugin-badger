@@ -20,14 +20,16 @@ module Fastlane
       JETBRAINS_FONT = File.join(FONTS_DIR, "JetBrainsMonoNL-Bold.ttf")
       FIGTREE_FONT   = File.join(FONTS_DIR, "Figtree-Black.otf")
 
-      # Per-corner configuration:
+      # Typed value object for per-corner ribbon configuration.
       #   angle — ImageMagick rotation in degrees (positive = clockwise)
       #   cx, cy — ribbon center as a fraction of icon size
+      CornerConfig = Data.define(:angle, :cx, :cy)
+
       CORNER_CFG = {
-        bottom_right: { angle: -45, cx: 0.75, cy: 0.75 },
-        bottom_left:  { angle:  45, cx: 0.25, cy: 0.75 },
-        top_right:    { angle:  45, cx: 0.75, cy: 0.25 },
-        top_left:     { angle: -45, cx: 0.25, cy: 0.25 }
+        bottom_right: CornerConfig.new(angle: -45, cx: 0.75, cy: 0.75),
+        bottom_left:  CornerConfig.new(angle:  45, cx: 0.25, cy: 0.75),
+        top_right:    CornerConfig.new(angle:  45, cx: 0.75, cy: 0.25),
+        top_left:     CornerConfig.new(angle: -45, cx: 0.25, cy: 0.25)
       }.freeze
 
       DARK_BG    = "#1c1c1e"
@@ -44,7 +46,7 @@ module Fastlane
       #   AppIcon.appiconset/ are discovered automatically.
       # @param version   [String] App version string, e.g. "1.5.2"
       # @param build     [String] Build number string, e.g. "1234"
-      # @param ticket    [String, nil] Optional JIRA ticket, e.g. "LIG-2969".
+      # @param ticket    [String, nil] Optional label, e.g. "TKT-1234".
       #   When present a second badge is composited at Center.
       def self.stamp_text(icon_path:, version:, build:, ticket: nil)
         icons = resolve_icons(icon_path)
@@ -63,7 +65,7 @@ module Fastlane
             version_badge_path = tmp_file("version_badge", ".png")
             generate_text_badge(version_label, version_badge_path, split_at: "-")
             round_corners(version_badge_path, radius: 4)
-            composite_badge(icon, version_badge_path, "North", scale: 0.5)
+            composite_badge(icon, version_badge_path, "North")
             FileUtils.rm_f(version_badge_path)
           end
 
@@ -71,7 +73,7 @@ module Fastlane
             ticket_badge_path = tmp_file("ticket_badge", ".png")
             generate_text_badge(ticket.strip, ticket_badge_path, split_at: nil)
             round_corners(ticket_badge_path, radius: 4)
-            composite_badge(icon, ticket_badge_path, "Center", scale: 0.5)
+            composite_badge(icon, ticket_badge_path, "Center")
             FileUtils.rm_f(ticket_badge_path)
           end
         end
@@ -135,25 +137,17 @@ module Fastlane
       def self.resolve_icons(icon_path)
         path = File.expand_path(icon_path)
 
-        if File.file?(path) && path.end_with?(".png")
-          return [path]
-        end
-
-        if File.directory?(path)
-          # If the path is itself an appiconset, use it directly
-          if path.end_with?(".appiconset")
-            return Dir.glob(File.join(path, "*.png")).sort
-          end
-
-          # Otherwise search inside for AppIcon.appiconset directories
+        case path
+        in _ if File.file?(path) && path.end_with?(".png")
+          [path]
+        in _ if File.directory?(path) && path.end_with?(".appiconset")
+          Dir.glob(File.join(path, "*.png")).sort
+        in _ if File.directory?(path)
           pngs = Dir.glob(File.join(path, "**/AppIcon.appiconset/*.png")).sort
-          return pngs unless pngs.empty?
-
-          # Fallback: any PNG under the given directory
-          return Dir.glob(File.join(path, "**/*.png")).sort
+          pngs.empty? ? Dir.glob(File.join(path, "**/*.png")).sort : pngs
+        else
+          []
         end
-
-        []
       end
 
       # ────────────────────────────────────────────────────────────────────────
@@ -254,17 +248,18 @@ module Fastlane
       end
 
       # Composites a badge PNG onto an icon PNG in-place.
-      # The badge is resized to `scale` fraction of the icon's width before
-      # compositing so it looks proportional regardless of icon resolution.
+      # The badge is resized to `scale` fraction of the icon's HEIGHT before
+      # compositing. Scaling by height (not width) ensures consistent text size
+      # across all badge types regardless of how many characters they contain.
       #
       # @param icon_path  [String]  Path to the icon PNG (modified in-place).
       # @param badge_path [String]  Path to the badge PNG.
       # @param gravity    [String]  ImageMagick gravity, e.g. "North", "Center".
-      # @param scale      [Float]   Badge width as a fraction of icon width (0..1).
-      def self.composite_badge(icon_path, badge_path, gravity, scale: 0.5)
+      # @param scale      [Float]   Badge height as a fraction of icon height (0..1).
+      def self.composite_badge(icon_path, badge_path, gravity, scale: 0.12)
         icon  = MiniMagick::Image.open(icon_path)
         badge = MiniMagick::Image.open(badge_path)
-        badge.resize "#{(icon.width * scale).to_i}x"
+        badge.resize "x#{(icon.height * scale).to_i}"
 
         result = icon.composite(badge) do |c|
           c.compose "Over"
@@ -298,7 +293,7 @@ module Fastlane
       def self.generate_corner_banner(label, out_path, corner: :bottom_right,
                                       style: :dark, size: :normal, icon_size: 1024)
         cfg      = CORNER_CFG[corner]
-        angle    = cfg[:angle]
+        angle    = cfg.angle
         bg_color = style == :dark ? DARK_BG : LIGHT_BG
         text_fill = style == :dark ? "rgba(255,255,255,0.72)" : "rgba(20,20,20,0.72)"
 
@@ -371,12 +366,12 @@ module Fastlane
 
         # Determine rotated image dimensions, then composite onto icon-sized canvas.
         # Position the ribbon so its center aligns with the corner's (cx, cy) fraction.
-        rot_dims = `magick identify -format "%wx%h" "#{rotated_path}"`.strip.split("x").map(&:to_i)
-        rot_w    = rot_dims[0]
-        rot_h    = rot_dims[1]
+        rot_w, rot_h = IO.popen(
+          ["magick", "identify", "-format", "%wx%h", rotated_path], &:read
+        ).split("x").map(&:to_i)
 
-        cx    = (icon_size * cfg[:cx]).to_i
-        cy    = (icon_size * cfg[:cy]).to_i
+        cx    = (icon_size * cfg.cx).to_i
+        cy    = (icon_size * cfg.cy).to_i
         off_x = cx - rot_w / 2
         off_y = cy - rot_h / 2
 
