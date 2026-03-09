@@ -1,3 +1,9 @@
+# badger — fastlane-plugin-badger
+# stamp_corner_banner_action.rb
+#
+# Created by Richard P. Ulivella on 09 Mar 2026.
+# Copyright © 2026 Richard P. Ulivella. All rights reserved.
+
 require "fastlane/plugin/badger/helper/badger_helper"
 
 module Fastlane

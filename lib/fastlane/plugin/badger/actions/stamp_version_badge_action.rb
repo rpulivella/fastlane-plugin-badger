@@ -1,3 +1,9 @@
+# badger — fastlane-plugin-badger
+# stamp_version_badge_action.rb
+#
+# Created by Richard P. Ulivella on 09 Mar 2026.
+# Copyright © 2026 Richard P. Ulivella. All rights reserved.
+
 require "fastlane/plugin/badger/helper/badger_helper"
 
 module Fastlane
@@ -60,7 +66,8 @@ module Fastlane
             key:         :xcodeproj,
             env_name:    "BADGER_XCODEPROJ",
             description: "Path to the .xcodeproj file. Used to auto-read version/build " \
-                         "when version or build params are not provided",
+                         "when version or build params are not provided. " \
+                         "Example: 'MyApp/MyApp.xcodeproj'",
             optional:    true,
             type:        String
           ),

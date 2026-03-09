@@ -1,3 +1,9 @@
+# badger — fastlane-plugin-badger
+# stamp_label_badge_action.rb
+#
+# Created by Richard P. Ulivella on 09 Mar 2026.
+# Copyright © 2026 Richard P. Ulivella. All rights reserved.
+
 require "fastlane/plugin/badger/helper/badger_helper"
 
 module Fastlane
@@ -34,7 +40,7 @@ module Fastlane
       def self.details
         [
           "Composites a full-orange text badge showing any label you provide",
-          "(e.g. 'LIG-2969', 'PR-42', 'main') at the center of every icon",
+          "(e.g. 'TKT-1234', 'PR-42', 'main') at the center of every icon",
           "matched by icon_glob. Use on its own or combine with",
           "stamp_version_badge to also show a version+build badge.",
           "No network access — pure ImageMagick via mini_magick.",
@@ -47,7 +53,7 @@ module Fastlane
           FastlaneCore::ConfigItem.new(
             key:         :label,
             env_name:    "BADGER_LABEL",
-            description: "Text to display on the badge, e.g. 'LIG-2969' or 'PR-42'",
+            description: "Text to display on the badge, e.g. 'TKT-1234' or 'PR-42'",
             optional:    false,
             type:        String
           ),

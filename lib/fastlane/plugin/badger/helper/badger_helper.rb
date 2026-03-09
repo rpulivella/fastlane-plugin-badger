@@ -1,3 +1,9 @@
+# badger — fastlane-plugin-badger
+# badger_helper.rb
+#
+# Created by Richard P. Ulivella on 09 Mar 2026.
+# Copyright © 2026 Richard P. Ulivella. All rights reserved.
+
 require "mini_magick"
 require "tmpdir"
 require "fileutils"
@@ -151,7 +157,7 @@ module Fastlane
       end
 
       # ────────────────────────────────────────────────────────────────────────
-      # Text badge helpers (Section B logic from test script)
+      # Text badge helpers
       # ────────────────────────────────────────────────────────────────────────
 
       # Clips an image to rounded corners using DstIn compositing.
@@ -269,7 +275,7 @@ module Fastlane
       end
 
       # ────────────────────────────────────────────────────────────────────────
-      # Corner banner helpers (Section C logic from test script)
+      # Corner banner helpers
       # ────────────────────────────────────────────────────────────────────────
 
       # Generates a canvas-sized transparent PNG with the diagonal ribbon

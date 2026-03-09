@@ -34,7 +34,7 @@ Badger generates everything locally:
   ```sh
   brew install imagemagick   # macOS
   ```
-- **Ruby 2.6+**
+- **Ruby 3.3+**
 - **mini_magick** gem (declared as a dependency, installed automatically)
 
 ---
@@ -93,7 +93,7 @@ The badge is gray on the left (version) and orange on the right (build):
 stamp_version_badge(
   version:   "1.5.2",   # required if xcodeproj not provided
   build:     "1234",    # required if xcodeproj not provided
-  xcodeproj: "Slyyd/Slyyd.xcodeproj",  # optional — auto-reads version/build
+  xcodeproj: "MyApp/MyApp.xcodeproj",  # optional — auto-reads version/build
   icon_glob: "**/AppIcon.appiconset/*.png"  # default
 )
 ```
@@ -109,26 +109,26 @@ stamp_version_badge(
 
 ### `stamp_label_badge`
 
-Stamps a single full-orange badge showing a JIRA ticket or label at
-the center of every matched icon.
+Stamps a single full-orange badge showing any label at the center of
+every matched icon.
 
 ```ruby
 stamp_label_badge(
-  ticket:    "LIG-2969",
+  label:     "TKT-1234",
   icon_glob: "**/AppIcon.appiconset/*.png"  # default
 )
 ```
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `ticket` | String | — | JIRA ticket or label, e.g. `"LIG-2969"`. |
+| `label` | String | — | Any text label, e.g. `"TKT-1234"` or `"PR-42"`. |
 | `icon_glob` | String | `**/AppIcon.appiconset/*.png` | Glob to discover icons. |
 
-To combine a version badge with a ticket badge in a single lane:
+To combine a version badge with a label badge in a single lane:
 
 ```ruby
 stamp_version_badge(version: "1.5.2", build: "1234")
-stamp_label_badge(ticket: "LIG-2969")
+stamp_label_badge(label: "TKT-1234")
 ```
 
 ---
@@ -190,7 +190,7 @@ subtler treatment.
 ```ruby
 lane :deploy_alpha do
   stamp_version_badge(
-    xcodeproj: "Slyyd/Slyyd.xcodeproj"
+    xcodeproj: "MyApp/MyApp.xcodeproj"
   )
   stamp_corner_banner(
     label:  "ALPHA",
@@ -207,7 +207,7 @@ end
 ```ruby
 lane :deploy_nda_beta do
   stamp_version_badge(
-    xcodeproj: "Slyyd/Slyyd.xcodeproj"
+    xcodeproj: "MyApp/MyApp.xcodeproj"
   )
   stamp_corner_banner(
     label:  "NDA",
@@ -223,9 +223,9 @@ end
 
 ```ruby
 lane :deploy_pr_build do
-  ticket = ENV["CIRCLE_BRANCH"]&.match(/LIG-\d+/)&.[](0) || "DEV"
-  stamp_version_badge(xcodeproj: "Slyyd/Slyyd.xcodeproj")
-  stamp_label_badge(ticket: ticket)
+  ticket = ENV["BRANCH_NAME"]&.match(/TKT-\d+/)&.[](0) || "DEV"
+  stamp_version_badge(xcodeproj: "MyApp/MyApp.xcodeproj")
+  stamp_label_badge(label: ticket)
   stamp_corner_banner(label: "PREVIEW", style: "dark")
   # ... build and distribute
 end

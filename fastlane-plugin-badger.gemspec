@@ -23,7 +23,7 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://github.com/rpulivella/fastlane-plugin-badger"
   spec.license       = "MIT"
 
-  spec.required_ruby_version = ">= 2.6"
+  spec.required_ruby_version = ">= 3.3"
 
   spec.files = Dir[
     "lib/**/*.rb",

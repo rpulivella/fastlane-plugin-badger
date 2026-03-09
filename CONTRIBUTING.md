@@ -63,7 +63,7 @@ bundle install
 bundle exec rake spec
 
 # Run a visual smoke test (requires ImageMagick 7+)
-bundle exec ruby workarea/smoke_test.rb
+bundle exec ruby spec/smoke_test.rb
 ```
 
 ## Architecture
