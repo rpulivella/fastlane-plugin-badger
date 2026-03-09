@@ -46,51 +46,85 @@ end
 
 puts "\nbadger smoke test — output: #{OUT_DIR}\n\n"
 
-# ── A: stamp_version_badge ───────────────────────────────────────────────────
+# ── A: center slot only (stamp_version_badge equivalent) ─────────────────────
 
-puts "A) stamp_version_badge"
-icon_a = File.join(OUT_DIR, "A_version.png")
+puts "A) Center slot — version (grey top) + build (orange bottom)"
+icon_a = File.join(OUT_DIR, "A_center_version_build.png")
 blue_icon(icon_a)
-BadgerHelper.stamp_text(icon_path: icon_a, version: "1.5.2", build: "1234")
+BadgerHelper.stamp_text(icon_path: icon_a, center_top: "1.5.2", center_bottom: "6349")
 puts "   → #{icon_a}"
 
-# ── B: stamp_label_badge ─────────────────────────────────────────────────────
+# ── B: north slot only — two sub-slots (stamp_label_badge equivalent) ────────
 
-puts "B) stamp_label_badge"
-icon_b = File.join(OUT_DIR, "B_label.png")
+puts "B) North slot — LIG- (grey left) + 2969 (orange right)"
+icon_b = File.join(OUT_DIR, "B_north_ticket.png")
 blue_icon(icon_b)
-BadgerHelper.stamp_text(icon_path: icon_b, version: nil, build: nil, ticket: "TKT-1234")
+BadgerHelper.stamp_text(icon_path: icon_b, north_left: "LIG-", north_right: "2969")
 puts "   → #{icon_b}"
 
-# ── C: stamp_version + label combined ────────────────────────────────────────
+# ── C: north + center combined (Slyyd Alpha layout) ──────────────────────────
 
-puts "C) stamp_version + label combined"
-icon_c = File.join(OUT_DIR, "C_combined.png")
+puts "C) North + Center combined — Slyyd Alpha layout"
+icon_c = File.join(OUT_DIR, "C_slyyd_alpha.png")
 blue_icon(icon_c)
-BadgerHelper.stamp_text(icon_path: icon_c, version: "1.5.2", build: "1234", ticket: "TKT-1234")
+BadgerHelper.stamp_text(
+  icon_path:     icon_c,
+  north_left:    "LIG-",
+  north_right:   "2969",
+  center_top:    "1.5.2",
+  center_bottom: "6349"
+)
 puts "   → #{icon_c}"
 
-# ── D: corner banners — all four corners, normal size ────────────────────────
+# ── D: north + center + corner banner (full Slyyd Alpha) ─────────────────────
 
-puts "D) stamp_corner_banner — all four corners (BETA, normal)"
+puts "D) Full Slyyd Alpha — North + Center + ALPHA banner"
+icon_d = File.join(OUT_DIR, "D_slyyd_alpha_full.png")
+blue_icon(icon_d)
+BadgerHelper.stamp_text(
+  icon_path:     icon_d,
+  north_left:    "LIG-",
+  north_right:   "2969",
+  center_top:    "1.5.2",
+  center_bottom: "6349"
+)
+BadgerHelper.stamp_corner_banner(icon_path: icon_d, label: "ALPHA", corner: :bottom_right, style: :light, size: :normal)
+puts "   → #{icon_d}"
+
+# ── E: north single sub-slot only (north_right only) ─────────────────────────
+
+puts "E) North slot — right only (single orange)"
+icon_e = File.join(OUT_DIR, "E_north_right_only.png")
+blue_icon(icon_e)
+BadgerHelper.stamp_text(icon_path: icon_e, north_right: "PR-42")
+puts "   → #{icon_e}"
+
+# ── F: center single sub-slot only (center_bottom only) ──────────────────────
+
+puts "F) Center slot — bottom only (single orange)"
+icon_f = File.join(OUT_DIR, "F_center_bottom_only.png")
+blue_icon(icon_f)
+BadgerHelper.stamp_text(icon_path: icon_f, center_bottom: "6349")
+puts "   → #{icon_f}"
+
+# ── G: corner banners — all four corners, normal size ────────────────────────
+
+puts "G) stamp_corner_banner — all four corners (BETA, normal)"
 %i[bottom_right bottom_left top_right top_left].each do |corner|
-  name = "D_beta_#{corner}.png"
+  name = "G_beta_#{corner}.png"
   icon = File.join(OUT_DIR, name)
   blue_icon(icon)
   BadgerHelper.stamp_corner_banner(icon_path: icon, label: "BETA", corner: corner, style: :light, size: :normal)
   puts "   → #{icon}"
 end
 
-# ── E: corner banners — all four corners, large size ("BIG") ─────────────────
+# ── H: corner banners — large size ("NDA") ───────────────────────────────────
 
-puts "E) stamp_corner_banner — all four corners (BIG, large)"
-%i[bottom_right bottom_left top_right top_left].each do |corner|
-  name = "E_big_#{corner}.png"
-  icon = File.join(OUT_DIR, name)
-  blue_icon(icon)
-  BadgerHelper.stamp_corner_banner(icon_path: icon, label: "BIG", corner: corner, style: :light, size: :large)
-  puts "   → #{icon}"
-end
+puts "H) stamp_corner_banner — bottom_right (NDA, large)"
+icon_h = File.join(OUT_DIR, "H_nda_large.png")
+blue_icon(icon_h)
+BadgerHelper.stamp_corner_banner(icon_path: icon_h, label: "NDA", corner: :bottom_right, style: :light, size: :large)
+puts "   → #{icon_h}"
 
 # ── open all results ──────────────────────────────────────────────────────────
 
