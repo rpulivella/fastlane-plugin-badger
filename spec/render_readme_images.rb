@@ -40,11 +40,10 @@ end
 
 puts "\nRendering README images → #{OUT_DIR}\n\n"
 
-# ── Example 1: Dev / alpha build ─────────────────────────────────────────────
-# All three actions: stamp_label_badge (north) + stamp_version_badge (center)
-# + stamp_corner_banner. The most information-dense layout.
-puts "1) Dev / alpha build — ticket + version + ALPHA corner"
-icon = File.join(OUT_DIR, "example_1_alpha.png")
+# ── Examples: stamp_label_badge + stamp_version_badge + stamp_corner_banner ──
+
+puts "example_1: north_left + north_right + center_top + center_bottom + corner"
+icon = File.join(OUT_DIR, "example_1_all_actions.png")
 blue_icon(icon)
 BadgerHelper.stamp_text(
   icon_path:     icon,
@@ -56,10 +55,8 @@ BadgerHelper.stamp_text(
 BadgerHelper.stamp_corner_banner(icon_path: icon, label: "ALPHA", corner: :bottom_right, style: :light, size: :normal)
 puts "   → #{icon}"
 
-# ── Example 2: Beta build ─────────────────────────────────────────────────────
-# stamp_version_badge (center) + stamp_corner_banner — no ticket badge.
-puts "2) Beta build — version + BETA corner"
-icon = File.join(OUT_DIR, "example_2_beta.png")
+puts "example_2: center_top + center_bottom + corner"
+icon = File.join(OUT_DIR, "example_2_version_corner.png")
 blue_icon(icon)
 BadgerHelper.stamp_text(
   icon_path:     icon,
@@ -69,22 +66,16 @@ BadgerHelper.stamp_text(
 BadgerHelper.stamp_corner_banner(icon_path: icon, label: "BETA", corner: :bottom_right, style: :light, size: :normal)
 puts "   → #{icon}"
 
-# ── Example 3: Corner banner only ────────────────────────────────────────────
-# stamp_corner_banner only — no text badges at all.
-puts "3) Corner only — BETA banner"
+puts "example_3: corner only"
 icon = File.join(OUT_DIR, "example_3_corner_only.png")
 blue_icon(icon)
 BadgerHelper.stamp_corner_banner(icon_path: icon, label: "BETA", corner: :bottom_right, style: :light, size: :normal)
 puts "   → #{icon}"
 
-# ── Anatomy ───────────────────────────────────────────────────────────────────
-# Every available slot active simultaneously:
-#   North slot:  north_left (grey) + north_right (orange)
-#   Center slot: center_top (grey) + center_bottom (orange)
-#   Corner banner
-# Shows the complete two-slot layout in one image.
-puts "4) Anatomy — all slots active: north (left+right), center (top+bottom), corner"
-icon = File.join(OUT_DIR, "example_anatomy.png")
+# ── Anatomy: badge slots ──────────────────────────────────────────────────────
+
+puts "anatomy_slots: north_left + north_right + center_top + center_bottom (no corner)"
+icon = File.join(OUT_DIR, "anatomy_slots.png")
 blue_icon(icon)
 BadgerHelper.stamp_text(
   icon_path:     icon,
@@ -93,12 +84,49 @@ BadgerHelper.stamp_text(
   center_top:    "2.1.0",
   center_bottom: "1042"
 )
+puts "   → #{icon}"
+
+# ── Anatomy: corner positions ─────────────────────────────────────────────────
+
+puts "anatomy_corner_*: all four corner positions"
+%i[bottom_right bottom_left top_right top_left].each do |corner|
+  icon = File.join(OUT_DIR, "anatomy_corner_#{corner}.png")
+  blue_icon(icon)
+  BadgerHelper.stamp_corner_banner(icon_path: icon, label: "ALPHA", corner: corner, style: :light, size: :normal)
+  puts "   → #{icon}"
+end
+
+# ── Anatomy: size — normal vs large ──────────────────────────────────────────
+
+puts "anatomy_size_normal: size: :normal"
+icon = File.join(OUT_DIR, "anatomy_size_normal.png")
+blue_icon(icon)
 BadgerHelper.stamp_corner_banner(icon_path: icon, label: "ALPHA", corner: :bottom_right, style: :light, size: :normal)
+puts "   → #{icon}"
+
+puts "anatomy_size_large: size: :large"
+icon = File.join(OUT_DIR, "anatomy_size_large.png")
+blue_icon(icon)
+BadgerHelper.stamp_corner_banner(icon_path: icon, label: "ALPHA", corner: :bottom_right, style: :light, size: :large)
+puts "   → #{icon}"
+
+# ── Anatomy: style — light vs dark ───────────────────────────────────────────
+
+puts "anatomy_style_light: style: :light"
+icon = File.join(OUT_DIR, "anatomy_style_light.png")
+blue_icon(icon)
+BadgerHelper.stamp_corner_banner(icon_path: icon, label: "ALPHA", corner: :bottom_right, style: :light, size: :normal)
+puts "   → #{icon}"
+
+puts "anatomy_style_dark: style: :dark"
+icon = File.join(OUT_DIR, "anatomy_style_dark.png")
+blue_icon(icon)
+BadgerHelper.stamp_corner_banner(icon_path: icon, label: "ALPHA", corner: :bottom_right, style: :dark, size: :normal)
 puts "   → #{icon}"
 
 # ── Open all results ──────────────────────────────────────────────────────────
 
-results = Dir.glob(File.join(OUT_DIR, "example_*.png")).sort
+results = Dir.glob(File.join(OUT_DIR, "*.png")).sort
 system("open", *results)
 
 puts "\nDone — #{results.count} images written to gh-docs/ and opened in Preview.\n"

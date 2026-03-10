@@ -9,14 +9,33 @@ Works identically on developer machines and CI. All rendering is done by the
 
 ## Examples
 
-| Alpha / dev build | Beta build | Corner only |
+| `north_left` + `north_right` + `center_top` + `center_bottom` + `corner` | `center_top` + `center_bottom` + `corner` | `corner` only |
 |:---:|:---:|:---:|
-| <img src="gh-docs/example_1_alpha.png" width="120"> | <img src="gh-docs/example_2_beta.png" width="120"> | <img src="gh-docs/example_3_corner_only.png" width="120"> |
-| ticket + version + ALPHA corner | version + BETA corner | corner banner only |
+| <img src="gh-docs/example_1_all_actions.png" width="120"> | <img src="gh-docs/example_2_version_corner.png" width="120"> | <img src="gh-docs/example_3_corner_only.png" width="120"> |
 
-Full anatomy — every slot active:
+## Anatomy
 
-<img src="gh-docs/example_anatomy.png" width="160">
+**Badge slots** — `north_left` (grey) · `north_right` (orange) · `center_top` (grey) · `center_bottom` (orange):
+
+<img src="gh-docs/anatomy_slots.png" width="140">
+
+**`corner`** — `bottom_right` · `bottom_left` · `top_right` · `top_left`:
+
+| `bottom_right` | `bottom_left` | `top_right` | `top_left` |
+|:---:|:---:|:---:|:---:|
+| <img src="gh-docs/anatomy_corner_bottom_right.png" width="100"> | <img src="gh-docs/anatomy_corner_bottom_left.png" width="100"> | <img src="gh-docs/anatomy_corner_top_right.png" width="100"> | <img src="gh-docs/anatomy_corner_top_left.png" width="100"> |
+
+**`size`** — `normal` (ribbon = 14% of icon) · `large` (ribbon = 17% of icon):
+
+| `size: :normal` | `size: :large` |
+|:---:|:---:|
+| <img src="gh-docs/anatomy_size_normal.png" width="120"> | <img src="gh-docs/anatomy_size_large.png" width="120"> |
+
+**`style`** — `light` (`#efefef` bg, dark text) · `dark` (`#1c1c1e` bg, white text):
+
+| `style: :light` | `style: :dark` |
+|:---:|:---:|
+| <img src="gh-docs/anatomy_style_light.png" width="120"> | <img src="gh-docs/anatomy_style_dark.png" width="120"> |
 
 ## Why badger?
 
@@ -172,29 +191,7 @@ stamp_corner_banner(
 | `size` | String | `"normal"` | `normal` — ribbon = 14% of icon. `large` — ribbon = 17% of icon. |
 | `icon_glob` | String | `**/AppIcon.appiconset/*.png` | Glob to discover icons. |
 
-#### Corner positions
-
-```
-top_left      top_right
-  ╲               ╱
-   ───────────────
-  |               |
-   ───────────────
-  ╱               ╲
-bottom_left   bottom_right   ← default
-```
-
-#### Size guide
-
-Use `:normal` for labels with 4+ characters (ALPHA, BETA, PREVIEW).
-Use `:large` for short labels (NDA, QA) — the extra ribbon thickness fills
-the visual weight left by fewer letters.
-
-#### Style guide
-
-Use `:dark` on colorful icons where you need the banner to "pop" against the
-background. Use `:light` when the icon is predominantly dark and you want a
-subtler treatment.
+See the [Anatomy](#anatomy) section above for visual comparisons of all corner positions, sizes, and styles.
 
 ## Typical Fastfile usage
 
