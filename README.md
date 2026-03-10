@@ -1,32 +1,28 @@
 # fastlane-plugin-badger
 
 A fastlane plugin that composites text badges and diagonal corner ribbon banners
-onto your app icons at build time — using ImageMagick locally.
-
-**No shields.io. No network calls. No static PNGs committed to the repo.**
+onto your app icons at build time — using ImageMagick locally. No network calls.
+No static PNGs committed to the repo.
 
 Works identically on developer machines and CI. All rendering is done by the
 `magick` binary via [mini_magick](https://github.com/minimagick/minimagick).
 
----
+## Examples
+
+| Alpha / dev build | Beta build | Corner only |
+|:---:|:---:|:---:|
+| <img src="gh-docs/example_1_alpha.png" width="120"> | <img src="gh-docs/example_2_beta.png" width="120"> | <img src="gh-docs/example_3_corner_only.png" width="120"> |
+| ticket + version + ALPHA corner | version + BETA corner | corner banner only |
+
+Full anatomy — every slot active:
+
+<img src="gh-docs/example_anatomy.png" width="160">
 
 ## Why badger?
 
-The conventional approach (`fastlane-plugin-badge`) fetches raster PNGs from
-shields.io at build time. This breaks on poor connections, fails entirely when
-shields.io is unreachable, and produces low-resolution results on 1024 px icons.
-
-Badger generates everything locally:
-
-| Feature | shields.io approach | badger |
-|---|---|---|
-| Network required | Yes | No |
-| Offline / CI-safe | No | Yes |
-| Resolution-independent | No | Yes |
-| Custom fonts | No | Yes (bundled OFL) |
-| Corner ribbon banners | No | Yes |
-
----
+Badger generates everything locally using ImageMagick — no network required,
+works offline and on CI, resolution-independent at any icon size, supports
+custom fonts (bundled OFL), and produces diagonal corner ribbon banners.
 
 ## Prerequisites
 
@@ -36,8 +32,6 @@ Badger generates everything locally:
   ```
 - **Ruby 3.3+**
 - **mini_magick** gem (declared as a dependency, installed automatically)
-
----
 
 ## Installation
 
@@ -74,8 +68,6 @@ SIL Open Font License 1.1.
 Both fonts can be committed to your repo without attribution requirements
 (check the individual license files to confirm for your use case).
 
----
-
 ## Badge slot layout
 
 Badger uses a two-slot system. Each slot has two optional sub-slots with a
@@ -101,8 +93,6 @@ consistent color convention: **grey = secondary**, **orange = primary**.
 
 Both sub-slots in both positions are optional. Providing only one sub-slot
 renders a single-color badge in that slot.
-
----
 
 ## Actions
 
@@ -132,8 +122,6 @@ stamp_version_badge(
 | `xcodeproj` | String | — | Path to `.xcodeproj` for auto-reading version/build. |
 | `icon_glob` | String | `**/AppIcon.appiconset/*.png` | Glob to discover icons. |
 
----
-
 ### `stamp_label_badge`
 
 Stamps a two-sub-slot horizontal badge into the **North slot** at the top of
@@ -159,8 +147,6 @@ stamp_label_badge(
 | `icon_glob` | String | `**/AppIcon.appiconset/*.png` | Glob to discover icons. |
 
 At least one of `north_left` or `north_right` must be provided.
-
----
 
 ### `stamp_corner_banner`
 
@@ -210,11 +196,9 @@ Use `:dark` on colorful icons where you need the banner to "pop" against the
 background. Use `:light` when the icon is predominantly dark and you want a
 subtler treatment.
 
----
-
 ## Typical Fastfile usage
 
-### Alpha Firebase / TestFlight build (version + ticket + corner banner)
+### Dev / alpha build (version + ticket + corner banner)
 
 ```ruby
 lane :deploy_alpha do
@@ -222,10 +206,8 @@ lane :deploy_alpha do
   stamp_version_badge(xcodeproj: "MyApp/MyApp.xcodeproj")
 
   # North: ticket prefix (grey left) + ticket number (orange right)
-  ticket = ENV["BRANCH_NAME"]&.match(/LIG-(\d+)/)
-  if ticket
-    stamp_label_badge(north_left: "LIG", north_right: ticket[1])
-  end
+  ticket = ENV["BRANCH_NAME"]&.match(/(\d+)/)
+  stamp_label_badge(north_left: "APP", north_right: ticket[1]) if ticket
 
   # Corner ribbon
   stamp_corner_banner(label: "ALPHA", style: "light")
@@ -234,21 +216,17 @@ lane :deploy_alpha do
 end
 ```
 
-### NDA Beta build (version + corner banner)
+### Beta build (version + corner banner)
 
 ```ruby
-lane :deploy_nda_beta do
+lane :deploy_beta do
   stamp_version_badge(xcodeproj: "MyApp/MyApp.xcodeproj")
-  stamp_corner_banner(
-    label: "NDA",
-    style: "light",
-    size:  "large"   # :large because NDA is a short label
-  )
+  stamp_corner_banner(label: "BETA", style: "light")
   # ... build and distribute
 end
 ```
 
-### Open Beta / Production Beta build (corner banner only)
+### Corner banner only
 
 ```ruby
 lane :deploy_open_beta do
@@ -256,8 +234,6 @@ lane :deploy_open_beta do
   # ... build and distribute
 end
 ```
-
----
 
 ## Corner banner design notes
 
@@ -280,15 +256,11 @@ boundary automatically.
 A drop shadow (`60x10+0+5`) is applied to the rotated ribbon before it is
 composited onto the icon canvas.
 
----
-
 ## Running tests
 
 ```sh
 bundle exec rake spec
 ```
-
----
 
 ## License
 
