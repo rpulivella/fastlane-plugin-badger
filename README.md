@@ -92,16 +92,7 @@ Both fonts can be committed to your repo without attribution requirements
 Badger uses a two-slot system. Each slot has two optional sub-slots with a
 consistent color convention: **grey = secondary**, **orange = primary**.
 
-```
-┌─────────────────────────┐
-│  [ LIG- ] [ 2969 ]      │  ← North slot: left (grey) | right (orange)
-│                         │
-│     [ 1.5.2 ]           │  ← Center slot: top (grey)
-│     [  6349 ]           │  ← Center slot: bottom (orange)
-│                         │
-│              ╲ ALPHA ╱  │  ← Corner banner (separate action)
-└─────────────────────────┘
-```
+<img src="gh-docs/anatomy_slots.png" width="160">
 
 - **North slot** — horizontal two-tone bar at the top of the icon
   - `north_left` → grey (#555555) segment on the left
@@ -148,12 +139,12 @@ every matched icon. Left segment is grey, right segment is orange. Either
 sub-slot is optional.
 
 ```
-  [ LIG- ] [ 2969 ]    ← grey | orange
+  [ APP ] [ 2969 ]    ← grey | orange
 ```
 
 ```ruby
 stamp_label_badge(
-  north_left:  "LIG-",   # optional — grey left segment
+  north_left:  "APP",   # optional — grey left segment
   north_right: "2969",   # optional — orange right segment
   icon_glob:   "**/AppIcon.appiconset/*.png"  # default
 )
@@ -161,7 +152,7 @@ stamp_label_badge(
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `north_left` | String | — | Grey left segment text, e.g. `"LIG-"`. |
+| `north_left` | String | — | Grey left segment text, e.g. `"APP"`. |
 | `north_right` | String | — | Orange right segment text, e.g. `"2969"`. |
 | `icon_glob` | String | `**/AppIcon.appiconset/*.png` | Glob to discover icons. |
 
@@ -191,7 +182,23 @@ stamp_corner_banner(
 | `size` | String | `"normal"` | `normal` — ribbon = 14% of icon. `large` — ribbon = 17% of icon. |
 | `icon_glob` | String | `**/AppIcon.appiconset/*.png` | Glob to discover icons. |
 
-See the [Anatomy](#anatomy) section above for visual comparisons of all corner positions, sizes, and styles.
+**`corner`** — `bottom_right` · `bottom_left` · `top_right` · `top_left`:
+
+| `bottom_right` | `bottom_left` | `top_right` | `top_left` |
+|:---:|:---:|:---:|:---:|
+| <img src="gh-docs/anatomy_corner_bottom_right.png" width="90"> | <img src="gh-docs/anatomy_corner_bottom_left.png" width="90"> | <img src="gh-docs/anatomy_corner_top_right.png" width="90"> | <img src="gh-docs/anatomy_corner_top_left.png" width="90"> |
+
+**`size`** — `normal` (14% of icon) · `large` (17% of icon):
+
+| `size: :normal` | `size: :large` |
+|:---:|:---:|
+| <img src="gh-docs/anatomy_size_normal.png" width="110"> | <img src="gh-docs/anatomy_size_large.png" width="110"> |
+
+**`style`** — `light` (`#efefef` bg, dark text) · `dark` (`#1c1c1e` bg, white text):
+
+| `style: :light` | `style: :dark` |
+|:---:|:---:|
+| <img src="gh-docs/anatomy_style_light.png" width="110"> | <img src="gh-docs/anatomy_style_dark.png" width="110"> |
 
 ## Typical Fastfile usage
 
