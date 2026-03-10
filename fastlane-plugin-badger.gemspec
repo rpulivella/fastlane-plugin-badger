@@ -8,13 +8,13 @@ Gem::Specification.new do |spec|
   spec.author        = "rpulivella"
   spec.email         = ""
 
-  spec.summary       = "Generates app icon badges locally using ImageMagick — " \
-                       "no shields.io, no network, no static PNGs"
+  spec.summary       = "Composites version/build badges and corner ribbon banners " \
+                       "onto app icons locally using ImageMagick"
   spec.description   = <<~DESC
     Badger composites version/build text badges and diagonal corner ribbon banners
     directly onto your app icons at build time using ImageMagick (via mini_magick).
-    No shields.io, no network calls, no pre-rendered PNGs committed to the repo.
-    Works entirely offline and runs identically on developer machines and CI.
+    Works entirely offline — no network calls, no pre-rendered PNGs committed to
+    the repo. Runs identically on developer machines and CI.
 
     Bundled fonts (both SIL Open Font License):
       - JetBrains Mono NL Bold  — for version/build/ticket text badges

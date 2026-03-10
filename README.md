@@ -1,11 +1,8 @@
-# fastlane-plugin-badger
+# Badger
 
-A fastlane plugin that composites text badges and diagonal corner ribbon banners
-onto your app icons at build time — using ImageMagick locally. No network calls.
-No static PNGs committed to the repo.
-
-Works identically on developer machines and CI. All rendering is done by the
-`magick` binary via [mini_magick](https://github.com/minimagick/minimagick).
+A fastlane plugin that stamps version badges and corner ribbon banners onto your
+app icons at build time. Pure ImageMagick — works offline, runs on CI, no static
+PNGs committed to the repo.
 
 ## Examples
 
